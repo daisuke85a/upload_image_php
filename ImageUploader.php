@@ -23,13 +23,48 @@ class ImageUploader{
       //create thumbnail
       $this->_createThumbnail($savePath);
 
+      $_SESSION['success'] = 'Upload Done!';
+
     }catch(\Exception $e){
-      echo $e->getMessage();
-      exit;
+      $_SESSION['error'] = $e->getMessage();
+//      exit;
     }
     // redirect
     header('Location: https://funspot.tokyo/upload_image_php/');
     exit;
+  }
+
+  public function getResults(){
+    $success = null;
+    $error = null;
+    if(isset($_SESSION['success'])){
+      $success = $_SESSION['success'];
+      unset($_SESSION['success']);
+    }
+    if(isset($_SESSION['error'])){
+      $success = $_SESSION['error'];
+      unset($_SESSION['error']);
+    }
+    return [$success, $error];
+  }
+
+  public function getImages(){
+    $images = [];
+    $files = [];
+    $imageDir = opendir(IMAGES_DIR);
+    while(false !== ($file = readdir($imageDir))){
+      if($file === '.' || $file === '..'){
+        continue;
+      }
+      $files[] = $file;
+      if(file_exists(THUMBNAIL_DIR . '/' . $file)){
+        $images[] = basename(THUMBNAIL_DIR) . '/' . $file;
+      }else{
+        $images[] = basename(IMAGES_DIR) . '/' . $file;
+      }
+    }
+    array_multisort($files, SORT_DESC, $images);
+    return $images;
   }
   private function _createThumbnail($savePath){
     $imageSize = getimagesize($savePath);
@@ -55,7 +90,7 @@ class ImageUploader{
     }
     $thumbHeight = round($height * THUMBNAIL_WIDTH / $width);
     $thumbImage = imagecreatetruecolor(THUMBNAIL_WIDTH, $thumbHeight);
-    imagecopyresampled($thumbImage, $srcImage, 0, 0, 0, 0, THUMBNAIL_WIDTH, $thumbHeight, $widthm, $height);
+    imagecopyresampled($thumbImage, $srcImage, 0, 0, 0, 0, THUMBNAIL_WIDTH, $thumbHeight, $width, $height);
 
     switch($this->_imageType){
     case IMAGETYPE_GIF:

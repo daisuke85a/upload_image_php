@@ -1,5 +1,7 @@
 <?php
 
+session_start();
+
 ini_set('display_errors', 1);
 define('MAX_FILE_SIZE', 1 * 1024 * 1024);
 define('THUMBNAIL_WIDTH', 400);
@@ -23,6 +25,10 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
   $uploader->upload();
 }
 
+list($success, $error) = $uploader->getResults();
+
+$images = $uploader->getImages();
+
 ?>
 
 <!DOCTYPE html>
@@ -33,8 +39,16 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
   <style>
     body{
       text-align: center;
-     font-family: Arial, sans-serif;
+      font-family: Arial, sans-serif;
    }
+    ul{
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    li{
+      margin-bottom: 5px;
+    }
   </style>
 </head>
 <body>
@@ -42,5 +56,26 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
   <input type="hidden" name="MAX_FILE_SIZE" value="<?= h(MAX_FILE_SIZE); ?>_">
     <input type="file" name="image">
     <input type="submit" value="upload">
+  </form>
+  <?php if(isset($success)) :?>
+    <div class="msg success"><?php echo h($success); ?></div>
+    <?php endif; ?>
+  <?php if(isset($error)) :?>
+    <div class="msg error"><?php echo h($error); ?></div>
+    <?php endif; ?>
+<ul>
+  <?php foreach ($images as $image) : ?>
+    <li>
+    <a href="<?php echo h(basename(IMAGES_DIR)) . '/' . basename($image); ?>">
+        <img src="<?php echo h($image); ?>">
+    </a>
+    </li>
+  <?php endforeach; ?>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+  <script>
+    $(function(){
+      $('.msg').fadeOut(3000);
+    });
+  </script>
 </body>
 </html>
